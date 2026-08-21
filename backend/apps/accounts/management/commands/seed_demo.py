@@ -7,6 +7,9 @@ from apps.locations.models import (
     Location,
     Site,
 )
+from apps.incidents.models import (
+    IncidentCategory,
+)
 from apps.organizations.models import Organization
 
 
@@ -241,6 +244,60 @@ class Command(BaseCommand):
                 "Seed FixTrack CI Sprint 2 terminé."
             )
         )
+
+        default_categories = [
+            {
+                "name": "Climatisation",
+                "icon": "❄️",
+            },
+            {
+                "name": "Électricité",
+                "icon": "⚡",
+            },
+            {
+                "name": "Plomberie",
+                "icon": "💧",
+            },
+            {
+                "name": "Informatique",
+                "icon": "💻",
+            },
+            {
+                "name": "Réseau",
+                "icon": "🌐",
+            },
+            {
+                "name": "Mobilier",
+                "icon": "🪑",
+            },
+            {
+                "name": "Sécurité",
+                "icon": "🛡️",
+            },
+            {
+                "name": "Nettoyage",
+                "icon": "🧹",
+            },
+            {
+                "name": "Ascenseur",
+                "icon": "🛗",
+            },
+            {
+                "name": "Autre",
+                "icon": "🔧",
+            },
+        ]
+
+
+        for category_data in default_categories:
+            IncidentCategory.objects.get_or_create(
+                organization=organization,
+                name=category_data["name"],
+                defaults={
+                    "icon": category_data["icon"],
+                    "is_active": True,
+                },
+            )
 
         self.stdout.write(
             "Mot de passe démo : FixTrack123!"

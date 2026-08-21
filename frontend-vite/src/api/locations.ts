@@ -55,9 +55,20 @@ export async function deleteSite(
 }
 
 
-export async function getBuildings() {
-  const { data } = await api.get<Building[]>(
-    "/locations/buildings/"
+export async function getBuildings(
+  siteId?: number
+) {
+  const { data } = await api.get<
+    Building[]
+  >(
+    "/locations/buildings/",
+    {
+      params: siteId
+        ? {
+            site: siteId,
+          }
+        : undefined,
+    }
   );
 
   return data;
@@ -98,9 +109,21 @@ export async function deleteBuilding(
 }
 
 
-export async function getFloors() {
-  const { data } = await api.get<Floor[]>(
-    "/locations/floors/"
+export async function getFloors(
+  buildingId?: number
+) {
+  const { data } = await api.get<
+    Floor[]
+  >(
+    "/locations/floors/",
+    {
+      params: buildingId
+        ? {
+            building:
+              buildingId,
+          }
+        : undefined,
+    }
   );
 
   return data;
@@ -141,9 +164,20 @@ export async function deleteFloor(
 }
 
 
-export async function getLocations() {
-  const { data } = await api.get<Location[]>(
-    "/locations/rooms/"
+export async function getLocations(
+  floorId?: number
+) {
+  const { data } = await api.get<
+    Location[]
+  >(
+    "/locations/rooms/",
+    {
+      params: floorId
+        ? {
+            floor: floorId,
+          }
+        : undefined,
+    }
   );
 
   return data;

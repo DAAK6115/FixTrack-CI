@@ -1,4 +1,7 @@
 import { useAuth } from "../context/AuthContext";
+import {
+  useNavigate,
+} from "react-router-dom";
 
 const cards = [
   { label: "Incidents ouverts", value: "24", trend: "+3 aujourd'hui" },
@@ -7,8 +10,10 @@ const cards = [
   { label: "Résolution moyenne", value: "4h 18m", trend: "-12 % ce mois" },
 ];
 
+
 export default function DashboardPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="page-stack">
@@ -22,7 +27,16 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <button className="primary-button">+ Signaler un incident</button>
+        <button
+  className="primary-button"
+  onClick={() =>
+    navigate(
+      "/incidents/new"
+    )
+  }
+>
+  + Signaler un incident
+</button>
       </section>
 
       <section className="stats-grid">

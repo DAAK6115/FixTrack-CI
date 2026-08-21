@@ -10,8 +10,11 @@ import RoleRoute from "./components/RoleRoute";
 import AppLayout from "./layouts/AppLayout";
 
 import DashboardPage from "./pages/DashboardPage";
+import IncidentDetailPage from "./pages/IncidentDetailPage";
+import IncidentsPage from "./pages/IncidentsPage";
 import LocationsPage from "./pages/LocationsPage";
 import LoginPage from "./pages/LoginPage";
+import NewIncidentPage from "./pages/NewIncidentPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import TechniciansPage from "./pages/TechniciansPage";
 import UsersPage from "./pages/UsersPage";
@@ -39,11 +42,19 @@ export default function App() {
 
           <Route
             path="/incidents"
-            element={
-              <PlaceholderPage
-                title="Incidents"
-              />
-            }
+            element={<IncidentsPage />}
+          />
+
+
+          <Route
+            path="/incidents/new"
+            element={<NewIncidentPage />}
+          />
+
+
+          <Route
+            path="/incidents/:id"
+            element={<IncidentDetailPage />}
           />
 
 
