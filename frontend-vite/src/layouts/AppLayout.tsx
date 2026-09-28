@@ -4,6 +4,9 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+import NotificationBell from
+  "../components/NotificationBell";
+
 import {
   useAuth,
 } from "../context/AuthContext";
@@ -23,7 +26,8 @@ export default function AppLayout() {
     logout,
   } = useAuth();
 
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
 
   if (!user) {
@@ -34,7 +38,9 @@ export default function AppLayout() {
   const signOut = () => {
     logout();
 
-    navigate("/login");
+    navigate(
+      "/login"
+    );
   };
 
 
@@ -42,6 +48,7 @@ export default function AppLayout() {
     <div className="app-shell">
 
       <aside className="sidebar">
+
         <div className="brand">
           <div className="brand-mark">
             F
@@ -74,17 +81,21 @@ export default function AppLayout() {
           </NavLink>
 
 
-          {(user.role === "TECHNICIAN" ||
-            user.role === "MANAGER" ||
-            user.role === "ADMIN") && (
+          {(
+            user.role === "TECHNICIAN"
+            || user.role === "MANAGER"
+            || user.role === "ADMIN"
+          ) && (
             <NavLink to="/interventions">
               Interventions
             </NavLink>
           )}
 
 
-          {(user.role === "MANAGER" ||
-            user.role === "ADMIN") && (
+          {(
+            user.role === "MANAGER"
+            || user.role === "ADMIN"
+          ) && (
             <>
               <NavLink to="/technicians">
                 Techniciens
@@ -118,6 +129,7 @@ export default function AppLayout() {
         >
           Déconnexion
         </button>
+
       </aside>
 
 
@@ -127,35 +139,55 @@ export default function AppLayout() {
 
           <div>
             <p className="eyebrow">
-              {user.organization?.name ??
-                "FixTrack CI"}
+              {
+                user.organization
+                  ?.name
+                ?? "FixTrack CI"
+              }
             </p>
 
             <h1>
               Bonjour{" "}
-              {user.first_name ||
-                user.full_name}
+              {
+                user.first_name
+                || user.full_name
+              }
             </h1>
           </div>
 
 
-          <div className="profile-chip">
+          <div className="topbar-actions">
 
-            <div className="avatar">
-              {(
-                user.first_name?.[0] ??
-                user.email[0]
-              ).toUpperCase()}
-            </div>
+            <NotificationBell />
 
-            <div>
-              <strong>
-                {user.full_name}
-              </strong>
 
-              <span>
-                {roleLabels[user.role]}
-              </span>
+            <div className="profile-chip">
+
+              <div className="avatar">
+                {
+                  (
+                    user
+                      .first_name?.[0]
+                    ?? user.email[0]
+                  )
+                  .toUpperCase()
+                }
+              </div>
+
+              <div>
+                <strong>
+                  {user.full_name}
+                </strong>
+
+                <span>
+                  {
+                    roleLabels[
+                      user.role
+                    ]
+                  }
+                </span>
+              </div>
+
             </div>
 
           </div>

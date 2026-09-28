@@ -9,19 +9,26 @@ from rest_framework.views import APIView
 
 
 class HealthView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [
+        AllowAny
+    ]
 
     def get(self, request):
         return Response(
             {
                 "status": "ok",
-                "service": "FixTrack CI API",
+                "service": (
+                    "FixTrack CI API"
+                ),
             }
         )
 
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path(
+        "admin/",
+        admin.site.urls,
+    ),
 
     path(
         "api/v1/health/",
@@ -31,27 +38,44 @@ urlpatterns = [
 
     path(
         "api/v1/auth/",
-        include("apps.accounts.urls"),
+        include(
+            "apps.accounts.urls"
+        ),
     ),
 
     path(
         "api/v1/users/",
-        include("apps.accounts.user_urls"),
+        include(
+            "apps.accounts.user_urls"
+        ),
     ),
 
     path(
         "api/v1/organizations/",
-        include("apps.organizations.urls"),
+        include(
+            "apps.organizations.urls"
+        ),
     ),
 
     path(
         "api/v1/locations/",
-        include("apps.locations.urls"),
+        include(
+            "apps.locations.urls"
+        ),
     ),
 
     path(
         "api/v1/incidents/",
-        include("apps.incidents.urls"),
+        include(
+            "apps.incidents.urls"
+        ),
+    ),
+
+    path(
+        "api/v1/notifications/",
+        include(
+            "apps.notifications.urls"
+        ),
     ),
 ]
 
@@ -59,5 +83,7 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(
         settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT,
+        document_root=(
+            settings.MEDIA_ROOT
+        ),
     )

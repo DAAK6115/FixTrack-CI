@@ -4,6 +4,10 @@ from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
 
 from apps.accounts.models import User
+from apps.notifications.models import Notification
+from apps.notifications.services import (
+    create_notification,
+)
 
 from .models import (
     Incident,
@@ -215,6 +219,18 @@ def assign_incident(
     previous = incident.status
     now = timezone.now()
 
+    previous_assignment = (
+        IncidentAssignment.objects
+        .filter(
+            incident=incident,
+            is_active=True,
+        )
+        .select_related(
+            "technician"
+        )
+        .first()
+    )
+
     (
         IncidentAssignment.objects
         .filter(
@@ -253,6 +269,32 @@ def assign_incident(
             comment
             or f"Incident assigné à {technician.full_name}.",
         )
+
+    notification_type = (
+        Notification.Type.INCIDENT_REASSIGNED
+        if (
+            previous_assignment
+            and previous_assignment.technician_id
+            != technician.id
+        )
+        else Notification.Type.INCIDENT_ASSIGNED
+    )
+
+    create_notification(
+        recipient=technician,
+        notification_type=notification_type,
+        title=(
+            "Intervention réassignée"
+            if notification_type
+            == Notification.Type.INCIDENT_REASSIGNED
+            else "Nouvelle intervention"
+        ),
+        message=(
+            f"{incident.reference} - "
+            f"{incident.title}"
+        ),
+        incident=incident,
+    )
 
     return incident
 
@@ -326,6 +368,26 @@ def start_incident(
         ),
     )
 
+    if incident.reported_by_id != user.id:
+        create_notification(
+            recipient=incident.reported_by,
+            notification_type=(
+                Notification.Type.INTERVENTION_STARTED
+                if previous == Incident.Status.ASSIGNED
+                else Notification.Type.INTERVENTION_RESUMED
+            ),
+            title=(
+                "Intervention démarrée"
+                if previous == Incident.Status.ASSIGNED
+                else "Intervention reprise"
+            ),
+            message=(
+                f"{incident.reference} - "
+                f"{incident.title}"
+            ),
+            incident=incident,
+        )
+
     return incident
 
 
@@ -371,6 +433,20 @@ def hold_incident(
         user,
         comment or "Intervention mise en attente.",
     )
+
+    if incident.reported_by_id != user.id:
+        create_notification(
+            recipient=incident.reported_by,
+            notification_type=(
+                Notification.Type.INTERVENTION_ON_HOLD
+            ),
+            title="Intervention en pause",
+            message=(
+                f"{incident.reference} - "
+                f"{incident.title}"
+            ),
+            incident=incident,
+        )
 
     return incident
 
@@ -463,6 +539,20 @@ def resolve_incident(
         f"Incident résolu. {resolution}",
     )
 
+    if incident.reported_by_id != user.id:
+        create_notification(
+            recipient=incident.reported_by,
+            notification_type=(
+                Notification.Type.INCIDENT_RESOLVED
+            ),
+            title="Intervention terminée",
+            message=(
+                f"{incident.reference} a été "
+                "marqué comme résolu."
+            ),
+            incident=incident,
+        )
+
     return incident
 
 
@@ -520,5 +610,26 @@ def close_incident(
         comment
         or "Résolution confirmée et incident fermé.",
     )
+
+    assignment = _active_assignment(
+        incident
+    )
+
+    if (
+        assignment
+        and assignment.technician_id
+        != user.id
+    ):
+        create_notification(
+            recipient=assignment.technician,
+            notification_type=(
+                Notification.Type.INCIDENT_CLOSED
+            ),
+            title="Incident fermé",
+            message=(
+                f"{incident.reference} a été fermé."
+            ),
+            incident=incident,
+        )
 
     return incident

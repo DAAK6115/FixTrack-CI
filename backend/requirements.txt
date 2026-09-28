@@ -5,3 +5,5 @@ django-cors-headers
 dj-database-url
 psycopg[binary]
 python-dotenv
+Pillow
+channels[daphne]>=4.0,<5

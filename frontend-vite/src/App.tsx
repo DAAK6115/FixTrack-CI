@@ -16,6 +16,7 @@ import InterventionsPage from "./pages/InterventionsPage";
 import LocationsPage from "./pages/LocationsPage";
 import LoginPage from "./pages/LoginPage";
 import NewIncidentPage from "./pages/NewIncidentPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import TechniciansPage from "./pages/TechniciansPage";
 import UsersPage from "./pages/UsersPage";
@@ -42,6 +43,14 @@ export default function App() {
 
 
           <Route
+            path="/notifications"
+            element={
+              <NotificationsPage />
+            }
+          />
+
+
+          <Route
             path="/incidents"
             element={<IncidentsPage />}
           />
@@ -55,7 +64,9 @@ export default function App() {
 
           <Route
             path="/incidents/:id"
-            element={<IncidentDetailPage />}
+            element={
+              <IncidentDetailPage />
+            }
           />
 
 
@@ -124,7 +135,9 @@ export default function App() {
           >
             <Route
               path="/users"
-              element={<UsersPage />}
+              element={
+                <UsersPage />
+              }
             />
 
             <Route

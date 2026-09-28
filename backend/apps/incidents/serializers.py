@@ -4,6 +4,10 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from apps.accounts.models import User
+from apps.notifications.models import Notification
+from apps.notifications.services import (
+    notify_roles,
+)
 from apps.organizations.models import Organization
 
 from .models import (
@@ -513,6 +517,24 @@ class IncidentCreateSerializer(serializers.ModelSerializer):
                 new_status=Incident.Status.REPORTED,
                 changed_by=request.user,
                 comment="Incident signalé.",
+            )
+
+            notify_roles(
+                organization=organization,
+                roles=[
+                    User.Role.ADMIN,
+                    User.Role.MANAGER,
+                ],
+                notification_type=(
+                    Notification.Type.INCIDENT_REPORTED
+                ),
+                title="Nouvel incident signalé",
+                message=(
+                    f"{incident.reference} - "
+                    f"{incident.title}"
+                ),
+                incident=incident,
+                exclude_user_id=request.user.id,
             )
 
         return incident
