@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.locations",
     "apps.incidents",
     "apps.notifications.apps.NotificationsConfig",
+    "apps.analytics.apps.AnalyticsConfig",
 ]
 
 

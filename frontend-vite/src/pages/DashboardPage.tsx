@@ -1,118 +1,495 @@
-import { useAuth } from "../context/AuthContext";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import {
   useNavigate,
 } from "react-router-dom";
 
-const cards = [
-  { label: "Incidents ouverts", value: "24", trend: "+3 aujourd'hui" },
-  { label: "En intervention", value: "7", trend: "29 % des incidents" },
-  { label: "Incidents critiques", value: "3", trend: "À traiter en priorité" },
-  { label: "Résolution moyenne", value: "4h 18m", trend: "-12 % ce mois" },
-];
+import {
+  getDashboardAnalytics,
+} from "../api/analytics";
+
+import {
+  BarList,
+  TrendChart,
+} from "../components/AnalyticsCharts";
+
+import {
+  useAuth,
+} from "../context/AuthContext";
+
+import type {
+  DashboardAnalytics,
+} from "../types/analytics";
+
+
+function formatDuration(
+  minutes: number
+) {
+  if (!minutes) {
+    return "0 min";
+  }
+
+  if (minutes < 60) {
+    return `${Math.round(minutes)} min`;
+  }
+
+  const hours =
+    Math.floor(
+      minutes / 60
+    );
+
+  const remaining =
+    Math.round(
+      minutes % 60
+    );
+
+  return remaining
+    ? `${hours} h ${remaining} min`
+    : `${hours} h`;
+}
 
 
 export default function DashboardPage() {
-  const { user } = useAuth();
   const navigate = useNavigate();
+
+  const {
+    user,
+  } = useAuth();
+
+
+  const [
+    data,
+    setData,
+  ] = useState<
+    DashboardAnalytics | null
+  >(null);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+
+  useEffect(() => {
+    getDashboardAnalytics()
+      .then(setData)
+      .catch(() => {
+        setError(
+          "Impossible de charger le tableau de bord."
+        );
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+
+  const cards = useMemo(
+    () => {
+      if (!data) {
+        return [];
+      }
+
+      if (
+        data.role
+        === "TECHNICIAN"
+      ) {
+        return [
+          {
+            label:
+              "À démarrer",
+            value:
+              data.summary.assigned,
+            detail:
+              "Interventions assignées",
+          },
+          {
+            label:
+              "En cours",
+            value:
+              data.summary.in_progress,
+            detail:
+              "Interventions actives",
+          },
+          {
+            label:
+              "En pause",
+            value:
+              data.summary.on_hold,
+            detail:
+              "En attente de reprise",
+          },
+          {
+            label:
+              "Durée moyenne",
+            value:
+              formatDuration(
+                data.summary
+                  .avg_intervention_minutes
+              ),
+            detail:
+              "Interventions terminées",
+          },
+        ];
+      }
+
+
+      if (
+        data.role
+        === "REQUESTER"
+      ) {
+        return [
+          {
+            label:
+              "Mes signalements",
+            value:
+              data.summary.total,
+            detail:
+              "Total créé",
+          },
+          {
+            label:
+              "Ouverts",
+            value:
+              data.summary.open,
+            detail:
+              "Encore à traiter",
+          },
+          {
+            label:
+              "Résolus",
+            value:
+              data.summary.resolved,
+            detail:
+              "Résolution enregistrée",
+          },
+          {
+            label:
+              "Fermés",
+            value:
+              data.summary.closed,
+            detail:
+              "Dossiers terminés",
+          },
+        ];
+      }
+
+
+      return [
+        {
+          label:
+            "Incidents ouverts",
+          value:
+            data.summary.open,
+          detail:
+            "À surveiller",
+        },
+        {
+          label:
+            "Critiques",
+          value:
+            data.summary
+              .critical_open,
+          detail:
+            "Priorité critique",
+        },
+        {
+          label:
+            "En cours",
+          value:
+            data.summary
+              .in_progress,
+          detail:
+            "Interventions actives",
+        },
+        {
+          label:
+            "Temps moyen",
+          value:
+            formatDuration(
+              data.summary
+                .avg_resolution_minutes
+            ),
+          detail:
+            "Signalement → résolution",
+        },
+      ];
+    },
+    [data]
+  );
+
+
+  if (loading) {
+    return (
+      <section className="panel">
+        Chargement du tableau de bord...
+      </section>
+    );
+  }
+
+
+  if (
+    error
+    || !data
+  ) {
+    return (
+      <div className="error-box">
+        {error
+          || "Données indisponibles."}
+      </div>
+    );
+  }
+
+
+  const managerView =
+    data.role === "ADMIN"
+    || data.role === "MANAGER";
+
 
   return (
     <div className="page-stack">
-      <section className="hero-card">
+
+      <section className="hero-card dashboard-hero">
         <div>
-          <p className="eyebrow">APERÇU OPÉRATIONNEL</p>
-          <h2>Tableau de bord</h2>
+          <p className="eyebrow">
+            VUE OPÉRATIONNELLE
+          </p>
+
+          <h2>
+            {
+              data.role
+              === "TECHNICIAN"
+                ? "Mes interventions"
+                : data.role
+                  === "REQUESTER"
+                    ? "Mes signalements"
+                    : "Tableau de bord"
+            }
+          </h2>
+
           <p className="muted">
-            Suivez les incidents et l'activité de{" "}
-            <strong>{user?.organization?.name ?? "votre organisation"}</strong>.
+            Les indicateurs sont calculés
+            à partir des données réelles
+            de FixTrack CI.
           </p>
         </div>
 
-        <button
-  className="primary-button"
-  onClick={() =>
-    navigate(
-      "/incidents/new"
-    )
-  }
->
-  + Signaler un incident
-</button>
+
+        <div className="dashboard-hero-actions">
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() =>
+              navigate(
+                "/incidents/new"
+              )
+            }
+          >
+            + Signaler un incident
+          </button>
+
+          {managerView && (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() =>
+                navigate(
+                  "/analytics"
+                )
+              }
+            >
+              Voir les analytics
+            </button>
+          )}
+        </div>
       </section>
 
-      <section className="stats-grid">
-        {cards.map((card) => (
-          <article className="stat-card" key={card.label}>
-            <span>{card.label}</span>
-            <strong>{card.value}</strong>
-            <small>{card.trend}</small>
-          </article>
-        ))}
+
+      <section className="analytics-stat-grid">
+        {cards.map(
+          (card) => (
+            <article
+              className="analytics-stat-card"
+              key={card.label}
+            >
+              <span>
+                {card.label}
+              </span>
+
+              <strong>
+                {card.value}
+              </strong>
+
+              <small>
+                {card.detail}
+              </small>
+            </article>
+          )
+        )}
       </section>
 
-      <section className="dashboard-grid">
-        <article className="panel">
-          <div className="panel-heading">
+
+      <section className="analytics-dashboard-grid">
+
+        <article className="panel analytics-wide">
+          <div className="analytics-section-heading">
             <div>
-              <p className="eyebrow">ACTIVITÉ</p>
-              <h3>Incidents récents</h3>
+              <p className="eyebrow">
+                7 DERNIERS JOURS
+              </p>
+
+              <h3>
+                Activité des incidents
+              </h3>
             </div>
-            <button className="ghost-button">Voir tout</button>
           </div>
 
-          <div className="incident-list">
-            <div className="incident-row">
-              <span className="status-dot critical" />
-              <div>
-                <strong>INC-2026-000182</strong>
-                <p>Climatisation en panne — Salle B12</p>
-              </div>
-              <span className="badge">En cours</span>
-            </div>
-
-            <div className="incident-row">
-              <span className="status-dot high" />
-              <div>
-                <strong>INC-2026-000181</strong>
-                <p>Prise électrique défectueuse — Administration</p>
-              </div>
-              <span className="badge">Assigné</span>
-            </div>
-
-            <div className="incident-row">
-              <span className="status-dot normal" />
-              <div>
-                <strong>INC-2026-000180</strong>
-                <p>Connexion réseau instable — Bibliothèque</p>
-              </div>
-              <span className="badge success">Résolu</span>
-            </div>
-          </div>
+          <TrendChart
+            points={data.trend}
+          />
         </article>
 
+
         <article className="panel">
-          <div className="panel-heading">
+          <div className="analytics-section-heading">
             <div>
-              <p className="eyebrow">ÉQUIPE</p>
-              <h3>Charge techniciens</h3>
+              <p className="eyebrow">
+                STATUTS
+              </p>
+
+              <h3>
+                Répartition
+              </h3>
             </div>
           </div>
 
-          <div className="technician-list">
+          <BarList
+            items={
+              data.by_status
+            }
+          />
+        </article>
+
+
+        <article className="panel">
+          <div className="analytics-section-heading">
             <div>
-              <strong>Kouassi Jean</strong>
-              <span>5 interventions actives</span>
-            </div>
-            <div>
-              <strong>Yao Eric</strong>
-              <span>3 interventions actives</span>
-            </div>
-            <div>
-              <strong>Traoré Moussa</strong>
-              <span>2 interventions actives</span>
+              <p className="eyebrow">
+                PRIORITÉS
+              </p>
+
+              <h3>
+                Niveau d'urgence
+              </h3>
             </div>
           </div>
+
+          <BarList
+            items={
+              data.by_priority
+            }
+          />
         </article>
+
       </section>
+
+
+      <section className="panel">
+        <div className="analytics-section-heading analytics-heading-row">
+          <div>
+            <p className="eyebrow">
+              RÉCENTS
+            </p>
+
+            <h3>
+              Derniers incidents
+            </h3>
+          </div>
+
+          <button
+            type="button"
+            className="notification-text-button"
+            onClick={() =>
+              navigate(
+                "/incidents"
+              )
+            }
+          >
+            Voir tous
+          </button>
+        </div>
+
+
+        <div className="analytics-recent-list">
+          {data.recent_incidents.map(
+            (incident) => (
+              <button
+                key={incident.id}
+                type="button"
+                className="analytics-recent-row"
+                onClick={() =>
+                  navigate(
+                    `/incidents/${incident.id}`
+                  )
+                }
+              >
+                <div>
+                  <span className="incident-reference">
+                    {
+                      incident.reference
+                    }
+                  </span>
+
+                  <strong>
+                    {incident.title}
+                  </strong>
+
+                  <small>
+                    {
+                      incident.site
+                    }
+                    {" • "}
+                    {
+                      incident.location
+                    }
+                  </small>
+                </div>
+
+                <span
+                  className={
+                    `incident-status status-${incident.status.toLowerCase()}`
+                  }
+                >
+                  {
+                    incident.status_label
+                  }
+                </span>
+
+                <span className="analytics-row-arrow">
+                  →
+                </span>
+              </button>
+            )
+          )}
+
+
+          {!data.recent_incidents.length && (
+            <div className="analytics-empty">
+              Aucun incident à afficher.
+            </div>
+          )}
+        </div>
+      </section>
+
     </div>
   );
 }

@@ -21,6 +21,7 @@ import "./sprint2.css";
 import "./sprint3.css";
 import "./sprint4.css";
 import "./sprint5.css";
+import "./sprint6.css";
 
 
 createRoot(

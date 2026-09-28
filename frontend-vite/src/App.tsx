@@ -9,6 +9,7 @@ import RoleRoute from "./components/RoleRoute";
 
 import AppLayout from "./layouts/AppLayout";
 
+import AnalyticsPage from "./pages/AnalyticsPage";
 import DashboardPage from "./pages/DashboardPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
 import IncidentsPage from "./pages/IncidentsPage";
@@ -116,9 +117,7 @@ export default function App() {
             <Route
               path="/analytics"
               element={
-                <PlaceholderPage
-                  title="Analytics"
-                />
+                <AnalyticsPage />
               }
             />
           </Route>

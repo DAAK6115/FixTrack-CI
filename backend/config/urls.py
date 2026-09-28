@@ -77,6 +77,13 @@ urlpatterns = [
             "apps.notifications.urls"
         ),
     ),
+
+    path(
+        "api/v1/analytics/",
+        include(
+            "apps.analytics.urls"
+        ),
+    ),
 ]
 
 
