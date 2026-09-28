@@ -6,6 +6,7 @@ import type {
   IncidentDetail,
   IncidentFilters,
   IncidentListItem,
+  IncidentPriority,
 } from "../types/incident";
 
 
@@ -115,6 +116,140 @@ export async function createIncident(
     "/incidents/",
     formData
   );
+
+  return data;
+}
+
+
+export async function validateIncident(
+  id: number,
+  payload: {
+    validated_priority?:
+      IncidentPriority;
+    comment?: string;
+  }
+) {
+  const { data } =
+    await api.post<IncidentDetail>(
+      `/incidents/${id}/validate/`,
+      payload
+    );
+
+  return data;
+}
+
+
+export async function rejectIncident(
+  id: number,
+  comment = ""
+) {
+  const { data } =
+    await api.post<IncidentDetail>(
+      `/incidents/${id}/reject/`,
+      {
+        comment,
+      }
+    );
+
+  return data;
+}
+
+
+export async function assignIncident(
+  id: number,
+  technicianId: number,
+  comment = ""
+) {
+  const { data } =
+    await api.post<IncidentDetail>(
+      `/incidents/${id}/assign/`,
+      {
+        technician_id:
+          technicianId,
+        comment,
+      }
+    );
+
+  return data;
+}
+
+
+export async function startIncident(
+  id: number,
+  comment = ""
+) {
+  const { data } =
+    await api.post<IncidentDetail>(
+      `/incidents/${id}/start/`,
+      {
+        comment,
+      }
+    );
+
+  return data;
+}
+
+
+export async function holdIncident(
+  id: number,
+  comment = ""
+) {
+  const { data } =
+    await api.post<IncidentDetail>(
+      `/incidents/${id}/hold/`,
+      {
+        comment,
+      }
+    );
+
+  return data;
+}
+
+
+export async function resumeIncident(
+  id: number,
+  comment = ""
+) {
+  const { data } =
+    await api.post<IncidentDetail>(
+      `/incidents/${id}/resume/`,
+      {
+        comment,
+      }
+    );
+
+  return data;
+}
+
+
+export async function resolveIncident(
+  id: number,
+  payload: {
+    resolution: string;
+    notes?: string;
+  }
+) {
+  const { data } =
+    await api.post<IncidentDetail>(
+      `/incidents/${id}/resolve/`,
+      payload
+    );
+
+  return data;
+}
+
+
+export async function closeIncident(
+  id: number,
+  comment = ""
+) {
+  const { data } =
+    await api.post<IncidentDetail>(
+      `/incidents/${id}/close/`,
+      {
+        comment,
+      }
+    );
 
   return data;
 }

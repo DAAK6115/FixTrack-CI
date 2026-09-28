@@ -1,0 +1,259 @@
+.workflow-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.workflow-block {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #edf1ef;
+}
+
+.workflow-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.workflow-assignee {
+  display: grid;
+  gap: 4px;
+  padding: 13px;
+  border: 1px solid #dce8e3;
+  border-radius: 12px;
+  background: #f6faf8;
+}
+
+.workflow-assignee span {
+  color: #718078;
+  font-size: 11px;
+}
+
+.workflow-assignee strong {
+  color: #23483b;
+  font-size: 13px;
+}
+
+.workflow-assignee small {
+  color: #718078;
+  font-size: 11px;
+}
+
+.workflow-resolution {
+  display: grid;
+  gap: 12px;
+  padding-top: 15px;
+  border-top: 1px dashed #dbe4df;
+}
+
+.workflow-loading {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eef6f2;
+  color: #3d6658;
+  font-size: 12px;
+}
+
+.danger-button {
+  border: 1px solid #ecc7c2;
+  border-radius: 12px;
+  background: #fff4f2;
+  color: #9c3e36;
+  padding: 12px 16px;
+  font-weight: 800;
+}
+
+.danger-button:disabled,
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.status-on_hold {
+  color: #7b5a1e;
+  background: #fff4d9;
+}
+
+.intervention-summary {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.intervention-summary > div {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border-radius: 12px;
+  background: #f7f9f8;
+}
+
+.intervention-summary span {
+  color: #79847f;
+  font-size: 11px;
+}
+
+.intervention-summary strong {
+  color: #253a32;
+  font-size: 12px;
+}
+
+.resolution-box {
+  display: grid;
+  gap: 7px;
+  margin-top: 15px;
+  padding: 15px;
+  border: 1px solid #d7e8e0;
+  border-radius: 12px;
+  background: #f1f8f5;
+}
+
+.resolution-box.secondary {
+  background: #f8faf9;
+}
+
+.resolution-box p {
+  margin: 0;
+  color: #465650;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.assignment-history {
+  display: grid;
+  margin-top: 12px;
+}
+
+.assignment-history-row {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-top: 1px solid #edf1ef;
+}
+
+.assignment-history-row:first-child {
+  border-top: 0;
+}
+
+.assignment-history-row strong {
+  color: #2b4139;
+  font-size: 13px;
+}
+
+.assignment-history-row span,
+.assignment-history-row small {
+  color: #78837e;
+  font-size: 11px;
+}
+
+.workflow-stats {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.intervention-list {
+  display: grid;
+  gap: 10px;
+}
+
+.intervention-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.4fr)
+    minmax(140px, 0.6fr)
+    auto
+    auto;
+  gap: 18px;
+  align-items: center;
+  padding: 17px 19px;
+  border: 1px solid #e1e8e5;
+  border-radius: 15px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+}
+
+.intervention-row:hover {
+  border-color: #bdd0c8;
+  background: #fbfdfc;
+}
+
+.intervention-row-main {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.intervention-row-main strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 15px;
+}
+
+.intervention-row-main small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #74807b;
+}
+
+.intervention-row-assignee {
+  display: grid;
+  gap: 4px;
+}
+
+.intervention-row-assignee span {
+  color: #7a8580;
+  font-size: 10px;
+}
+
+.intervention-row-assignee strong {
+  color: #34473f;
+  font-size: 12px;
+}
+
+.intervention-arrow {
+  color: #547466;
+  font-size: 18px;
+}
+
+@media (max-width: 900px) {
+  .intervention-row {
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto;
+  }
+
+  .intervention-row-assignee {
+    grid-column: 1;
+  }
+
+  .intervention-arrow {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .intervention-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .workflow-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-actions {
+    flex-direction: column;
+  }
+
+  .workflow-actions button {
+    width: 100%;
+  }
+}

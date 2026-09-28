@@ -12,6 +12,7 @@ import AppLayout from "./layouts/AppLayout";
 import DashboardPage from "./pages/DashboardPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
 import IncidentsPage from "./pages/IncidentsPage";
+import InterventionsPage from "./pages/InterventionsPage";
 import LocationsPage from "./pages/LocationsPage";
 import LoginPage from "./pages/LoginPage";
 import NewIncidentPage from "./pages/NewIncidentPage";
@@ -78,9 +79,7 @@ export default function App() {
             <Route
               path="/interventions"
               element={
-                <PlaceholderPage
-                  title="Interventions"
-                />
+                <InterventionsPage />
               }
             />
           </Route>

@@ -18,7 +18,8 @@ import {
 
 import "./styles.css";
 import "./sprint2.css";
-import "./sprint3.css"; 
+import "./sprint3.css";
+import "./sprint4.css";
 
 
 createRoot(

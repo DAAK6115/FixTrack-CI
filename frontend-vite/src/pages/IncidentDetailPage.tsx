@@ -12,6 +12,9 @@ import {
   getIncident,
 } from "../api/incidents";
 
+import IncidentWorkflowPanel from
+  "../components/IncidentWorkflowPanel";
+
 import type {
   IncidentDetail,
 } from "../types/incident";
@@ -99,6 +102,11 @@ export default function IncidentDetailPage() {
   }
 
 
+  const lastIntervention =
+    incident.interventions[0]
+    || null;
+
+
   return (
     <div className="page-stack">
 
@@ -140,13 +148,17 @@ export default function IncidentDetailPage() {
               className={
                 `incident-priority ${
                   priorityClasses[
-                    incident.requested_priority
+                    incident.validated_priority
+                    || incident.requested_priority
                   ]
                 }`
               }
             >
               {
-                incident.requested_priority_label
+                incident
+                  .validated_priority_label
+                || incident
+                  .requested_priority_label
               }
             </span>
 
@@ -207,6 +219,103 @@ export default function IncidentDetailPage() {
 
             </section>
           )}
+
+
+          {lastIntervention
+            && (
+              <section className="panel">
+                <p className="eyebrow">
+                  INTERVENTION
+                </p>
+
+                <h3>
+                  Compte rendu technique
+                </h3>
+
+                <div className="intervention-summary">
+                  <div>
+                    <span>
+                      Technicien
+                    </span>
+
+                    <strong>
+                      {
+                        lastIntervention
+                          .technician_name
+                      }
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Début
+                    </span>
+
+                    <strong>
+                      {new Date(
+                        lastIntervention
+                          .started_at
+                      ).toLocaleString(
+                        "fr-FR"
+                      )}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Fin
+                    </span>
+
+                    <strong>
+                      {
+                        lastIntervention
+                          .ended_at
+                        ? new Date(
+                            lastIntervention
+                              .ended_at
+                          ).toLocaleString(
+                            "fr-FR"
+                          )
+                        : "En cours"
+                      }
+                    </strong>
+                  </div>
+                </div>
+
+                {lastIntervention
+                  .resolution
+                  && (
+                    <div className="resolution-box">
+                      <strong>
+                        Résolution
+                      </strong>
+
+                      <p>
+                        {
+                          lastIntervention
+                            .resolution
+                        }
+                      </p>
+                    </div>
+                  )}
+
+                {lastIntervention.notes
+                  && (
+                    <div className="resolution-box secondary">
+                      <strong>
+                        Notes
+                      </strong>
+
+                      <p>
+                        {
+                          lastIntervention
+                            .notes
+                        }
+                      </p>
+                    </div>
+                  )}
+              </section>
+            )}
 
 
           <section className="panel">
@@ -279,6 +388,14 @@ export default function IncidentDetailPage() {
 
         <aside className="incident-detail-sidebar">
 
+          <IncidentWorkflowPanel
+            incident={incident}
+            onUpdated={
+              setIncident
+            }
+          />
+
+
           <section className="panel">
             <p className="eyebrow">
               INFORMATIONS
@@ -302,6 +419,35 @@ export default function IncidentDetailPage() {
                     incident
                       .category_detail
                       .name
+                  }
+                </strong>
+              </div>
+
+
+              <div>
+                <span>
+                  Priorité demandée
+                </span>
+
+                <strong>
+                  {
+                    incident
+                      .requested_priority_label
+                  }
+                </strong>
+              </div>
+
+
+              <div>
+                <span>
+                  Priorité confirmée
+                </span>
+
+                <strong>
+                  {
+                    incident
+                      .validated_priority_label
+                    || "Pas encore validée"
                   }
                 </strong>
               </div>
@@ -402,6 +548,50 @@ export default function IncidentDetailPage() {
             </div>
 
           </section>
+
+
+          {!!incident.assignments.length && (
+            <section className="panel">
+              <p className="eyebrow">
+                ASSIGNATIONS
+              </p>
+
+              <div className="assignment-history">
+                {incident.assignments.map(
+                  (assignment) => (
+                    <div
+                      key={assignment.id}
+                      className="assignment-history-row"
+                    >
+                      <strong>
+                        {
+                          assignment
+                            .technician_name
+                        }
+                      </strong>
+
+                      <span>
+                        {new Date(
+                          assignment
+                            .assigned_at
+                        ).toLocaleString(
+                          "fr-FR"
+                        )}
+                      </span>
+
+                      <small>
+                        {
+                          assignment.is_active
+                          ? "Assignation active"
+                          : "Ancienne assignation"
+                        }
+                      </small>
+                    </div>
+                  )
+                )}
+              </div>
+            </section>
+          )}
 
         </aside>
 

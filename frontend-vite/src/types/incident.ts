@@ -56,6 +56,39 @@ export type IncidentHistory = {
 };
 
 
+export type IncidentAssignment = {
+  id: number;
+
+  technician: number;
+  technician_name: string;
+  technician_email: string;
+
+  assigned_by_name: string;
+
+  assigned_at: string;
+  unassigned_at: string | null;
+
+  is_active: boolean;
+};
+
+
+export type Intervention = {
+  id: number;
+
+  technician: number;
+  technician_name: string;
+
+  started_at: string;
+  ended_at: string | null;
+
+  notes: string;
+  resolution: string;
+
+  created_at: string;
+  updated_at: string;
+};
+
+
 export type IncidentListItem = {
   id: number;
 
@@ -90,6 +123,12 @@ export type IncidentListItem = {
   reported_at: string;
 
   cover_image: string | null;
+
+  assigned_technician_id:
+    number | null;
+
+  assigned_technician_name:
+    string | null;
 };
 
 
@@ -174,6 +213,15 @@ export type IncidentDetail = {
 
   status_history:
     IncidentHistory[];
+
+  assignments:
+    IncidentAssignment[];
+
+  active_assignment:
+    IncidentAssignment | null;
+
+  interventions:
+    Intervention[];
 
   created_at: string;
   updated_at: string;
