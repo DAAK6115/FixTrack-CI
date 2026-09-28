@@ -16,7 +16,11 @@ class Organization(models.Model):
         choices=Type.choices,
         default=Type.OTHER,
     )
-    logo = models.URLField(blank=True)
+    logo = models.ImageField(
+        upload_to="organizations/logos/%Y/%m/",
+        null=True,
+        blank=True,
+    )
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=30, blank=True)
     address = models.CharField(max_length=255, blank=True)

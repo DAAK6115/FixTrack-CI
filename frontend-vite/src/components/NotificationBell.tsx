@@ -49,6 +49,41 @@ function websocketUrl(
 }
 
 
+
+function notificationDestination(
+  notification:
+    FixTrackNotification
+) {
+  if (
+    notification.incident
+  ) {
+    return (
+      `/incidents/${notification.incident}`
+    );
+  }
+
+  if (
+    notification.notification_type
+    === "EQUIPMENT_DELETION_REQUESTED"
+  ) {
+    return (
+      "/equipment/deletion-requests"
+    );
+  }
+
+  if (
+    notification.notification_type
+    === "EQUIPMENT_DELETION_APPROVED"
+    || notification.notification_type
+    === "EQUIPMENT_DELETION_REJECTED"
+  ) {
+    return "/equipment";
+  }
+
+  return "/notifications";
+}
+
+
 export default function NotificationBell() {
   const navigate = useNavigate();
 
@@ -80,6 +115,16 @@ export default function NotificationBell() {
       | null
     >(null);
 
+  const knownNotificationIds =
+    useRef<
+      Set<number>
+    >(
+      new Set()
+    );
+
+  const initializedNotifications =
+    useRef(false);
+
 
   const loadData =
     useCallback(
@@ -97,24 +142,73 @@ export default function NotificationBell() {
             getUnreadCount(),
           ]);
 
-          setNotifications(
+          const latest =
             list.slice(
               0,
               8
-            )
+            );
+
+          if (
+            initializedNotifications.current
+          ) {
+            for (
+              const notification
+              of latest
+            ) {
+              if (
+                !knownNotificationIds
+                  .current
+                  .has(
+                    notification.id
+                  )
+              ) {
+                knownNotificationIds
+                  .current
+                  .add(
+                    notification.id
+                  );
+
+                window.dispatchEvent(
+                  new CustomEvent(
+                    "fixtrack:notification",
+                    {
+                      detail:
+                        notification,
+                    }
+                  )
+                );
+              }
+            }
+          } else {
+            for (
+              const notification
+              of latest
+            ) {
+              knownNotificationIds
+                .current
+                .add(
+                  notification.id
+                );
+            }
+
+            initializedNotifications
+              .current = true;
+          }
+
+          setNotifications(
+            latest
           );
 
           setUnreadCount(
             count
           );
         } catch {
-          // Le centre reste silencieux
-          // si le backend est momentanément
-          // indisponible.
+          // Le prochain polling réessaiera.
         }
       },
       [user]
     );
+
 
 
   useEffect(() => {
@@ -127,10 +221,36 @@ export default function NotificationBell() {
       return;
     }
 
+    const timer =
+      window.setInterval(
+        () => {
+          void loadData();
+        },
+        5000
+      );
+
+    return () => {
+      window.clearInterval(
+        timer
+      );
+    };
+  }, [
+    loadData,
+    user,
+  ]);
+
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
     let socket:
       WebSocket | null = null;
 
     let disposed = false;
+
+    let failedConnections = 0;
 
 
     const connect = () => {
@@ -151,6 +271,11 @@ export default function NotificationBell() {
           token
         )
       );
+
+
+      socket.onopen = () => {
+        failedConnections = 0;
+      };
 
 
       socket.onmessage = (
@@ -184,6 +309,19 @@ export default function NotificationBell() {
             return;
           }
 
+          const alreadyKnown =
+            knownNotificationIds
+              .current
+              .has(
+                notification.id
+              );
+
+          knownNotificationIds
+            .current
+            .add(
+              notification.id
+            );
+
           setNotifications(
             (current) => {
               const withoutDuplicate =
@@ -204,11 +342,24 @@ export default function NotificationBell() {
           );
 
           if (
-            !notification.is_read
+            !alreadyKnown
+            && !notification.is_read
           ) {
             setUnreadCount(
               (current) =>
                 current + 1
+            );
+          }
+
+          if (!alreadyKnown) {
+            window.dispatchEvent(
+              new CustomEvent(
+                "fixtrack:notification",
+                {
+                  detail:
+                    notification,
+                }
+              )
             );
           }
         } catch {
@@ -220,6 +371,15 @@ export default function NotificationBell() {
 
       socket.onclose = () => {
         if (disposed) {
+          return;
+        }
+
+        failedConnections += 1;
+
+        if (
+          failedConnections
+          > 3
+        ) {
           return;
         }
 
@@ -289,13 +449,11 @@ export default function NotificationBell() {
       } finally {
         setOpen(false);
 
-        if (
-          notification.incident
-        ) {
-          navigate(
-            `/incidents/${notification.incident}`
-          );
-        }
+        navigate(
+          notificationDestination(
+            notification
+          )
+        );
       }
     };
 

@@ -1,8 +1,17 @@
 import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
   NavLink,
   Outlet,
+  useLocation,
   useNavigate,
 } from "react-router-dom";
+
+import BrandLogo from
+  "../components/BrandLogo";
 
 import NotificationBell from
   "../components/NotificationBell";
@@ -20,6 +29,83 @@ const roleLabels = {
 };
 
 
+
+function shouldRefreshRoute(
+  pathname: string,
+  notificationType: string
+) {
+  if (
+    pathname === "/notifications"
+  ) {
+    return true;
+  }
+
+  const incidentEvent =
+    notificationType.startsWith(
+      "INCIDENT_"
+    )
+    || notificationType.startsWith(
+      "INTERVENTION_"
+    );
+
+  if (incidentEvent) {
+    if (
+      pathname === "/dashboard"
+      || pathname === "/analytics"
+      || pathname === "/interventions"
+      || pathname === "/incidents"
+    ) {
+      return true;
+    }
+
+    if (
+      pathname.startsWith(
+        "/incidents/"
+      )
+      && pathname
+        !== "/incidents/new"
+    ) {
+      return true;
+    }
+  }
+
+  const equipmentEvent =
+    notificationType.startsWith(
+      "EQUIPMENT_"
+    );
+
+  if (equipmentEvent) {
+    if (
+      pathname === "/equipment"
+      || pathname
+        === "/equipment/deletion-requests"
+      || pathname
+        === "/equipment/archives"
+    ) {
+      return true;
+    }
+
+    if (
+      pathname.startsWith(
+        "/equipment/"
+      )
+      && pathname
+        !== "/equipment/qr-print"
+      && !pathname.endsWith(
+        "/report"
+      )
+      && !pathname.startsWith(
+        "/equipment/scan/"
+      )
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
 export default function AppLayout() {
   const {
     user,
@@ -28,6 +114,71 @@ export default function AppLayout() {
 
   const navigate =
     useNavigate();
+
+  const location =
+    useLocation();
+
+  const [
+    realtimeRevision,
+    setRealtimeRevision,
+  ] = useState(0);
+
+
+  useEffect(() => {
+    const handler = (
+      event: Event
+    ) => {
+      if (
+        !(event instanceof CustomEvent)
+      ) {
+        return;
+      }
+
+      const notification =
+        event.detail;
+
+      if (
+        !notification
+        || typeof notification
+          !== "object"
+        || typeof (
+          notification
+            .notification_type
+        ) !== "string"
+      ) {
+        return;
+      }
+
+      if (
+        shouldRefreshRoute(
+          location.pathname,
+          notification
+            .notification_type
+        )
+      ) {
+        setRealtimeRevision(
+          (current) =>
+            current + 1
+        );
+      }
+    };
+
+
+    window.addEventListener(
+      "fixtrack:notification",
+      handler
+    );
+
+
+    return () => {
+      window.removeEventListener(
+        "fixtrack:notification",
+        handler
+      );
+    };
+  }, [
+    location.pathname,
+  ]);
 
 
   if (!user) {
@@ -49,21 +200,15 @@ export default function AppLayout() {
 
       <aside className="sidebar">
 
-        <div className="brand">
-          <div className="brand-mark">
-            F
-          </div>
-
-          <div>
-            <strong>
-              FixTrack CI
-            </strong>
-
-            <span>
-              Maintenance & incidents
-            </span>
-          </div>
-        </div>
+        <NavLink
+          to="/dashboard"
+          className="sidebar-brand-logo"
+          aria-label="FixTrack CI - Tableau de bord"
+        >
+          <BrandLogo
+            className="fixtrack-brand-logo-sidebar"
+          />
+        </NavLink>
 
 
         <nav className="nav">
@@ -200,7 +345,11 @@ export default function AppLayout() {
 
 
         <section className="content">
-          <Outlet />
+          <Outlet
+            key={
+              `${location.pathname}-${realtimeRevision}`
+            }
+          />
         </section>
 
       </main>

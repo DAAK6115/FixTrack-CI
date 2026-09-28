@@ -55,6 +55,13 @@ class Equipment(models.Model):
     brand = models.CharField(max_length=120, blank=True)
     model_name = models.CharField(max_length=120, blank=True)
     serial_number = models.CharField(max_length=160, blank=True)
+
+    image = models.ImageField(
+        upload_to="equipment/%Y/%m/",
+        null=True,
+        blank=True,
+    )
+
     installation_date = models.DateField(null=True, blank=True)
     status = models.CharField(
         max_length=30,
@@ -88,3 +95,192 @@ class Equipment(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.name}"
+
+
+
+class EquipmentAuditLog(models.Model):
+    class Action(models.TextChoices):
+        UPDATE = (
+            "UPDATE",
+            "Modification",
+        )
+
+        DELETE_REQUESTED = (
+            "DELETE_REQUESTED",
+            "Demande de suppression",
+        )
+
+        DELETE_APPROVED = (
+            "DELETE_APPROVED",
+            "Suppression validée",
+        )
+
+        DELETE_REJECTED = (
+            "DELETE_REJECTED",
+            "Suppression refusée",
+        )
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.CASCADE,
+        related_name="equipment_audit_logs",
+    )
+
+    equipment = models.ForeignKey(
+        Equipment,
+        on_delete=models.CASCADE,
+        related_name="audit_logs",
+    )
+
+    action = models.CharField(
+        max_length=20,
+        choices=Action.choices,
+        db_index=True,
+    )
+
+    justification = models.TextField()
+
+    performed_by = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.PROTECT,
+        related_name="equipment_audit_actions",
+    )
+
+    before_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    after_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-created_at"
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "organization",
+                    "equipment",
+                    "created_at",
+                ]
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.equipment.code} - "
+            f"{self.action}"
+        )
+
+
+
+class EquipmentDeletionRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = (
+            "PENDING",
+            "En attente",
+        )
+
+        APPROVED = (
+            "APPROVED",
+            "Validée",
+        )
+
+        REJECTED = (
+            "REJECTED",
+            "Refusée",
+        )
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.CASCADE,
+        related_name="equipment_deletion_requests",
+    )
+
+    equipment = models.ForeignKey(
+        Equipment,
+        on_delete=models.CASCADE,
+        related_name="deletion_requests",
+    )
+
+    requested_by = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.PROTECT,
+        related_name="requested_equipment_deletions",
+    )
+
+    justification = models.TextField()
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
+
+    reviewed_by = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.PROTECT,
+        related_name="reviewed_equipment_deletions",
+        null=True,
+        blank=True,
+    )
+
+    review_note = models.TextField(
+        blank=True
+    )
+
+    requested_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-requested_at"
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "equipment",
+                ],
+                condition=models.Q(
+                    status="PENDING"
+                ),
+                name=(
+                    "unique_pending_equipment_deletion"
+                ),
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "organization",
+                    "status",
+                    "requested_at",
+                ]
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.equipment.code} - "
+            f"{self.status}"
+        )

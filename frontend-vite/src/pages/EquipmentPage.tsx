@@ -11,6 +11,7 @@ import {
 
 import {
   createEquipment,
+  createEquipmentCategory,
   getEquipment,
   getEquipmentCategories,
 } from "../api/equipment";
@@ -132,6 +133,7 @@ export default function EquipmentPage() {
     Location[]
   >([]);
 
+
   const [
     search,
     setSearch,
@@ -142,10 +144,43 @@ export default function EquipmentPage() {
     setStatusFilter,
   ] = useState("");
 
+
   const [
     showCreate,
     setShowCreate,
   ] = useState(false);
+
+  const [
+    showCategoryCreate,
+    setShowCategoryCreate,
+  ] = useState(false);
+
+
+  const [
+    categoryName,
+    setCategoryName,
+  ] = useState("");
+
+  const [
+    categoryIcon,
+    setCategoryIcon,
+  ] = useState("🔧");
+
+  const [
+    categoryDescription,
+    setCategoryDescription,
+  ] = useState("");
+
+  const [
+    categorySaving,
+    setCategorySaving,
+  ] = useState(false);
+
+  const [
+    categoryError,
+    setCategoryError,
+  ] = useState("");
+
 
   const [
     loading,
@@ -161,6 +196,20 @@ export default function EquipmentPage() {
     saving,
     setSaving,
   ] = useState(false);
+
+
+  const [
+    equipmentImage,
+    setEquipmentImage,
+  ] = useState<File | null>(
+    null
+  );
+
+  const [
+    equipmentImagePreview,
+    setEquipmentImagePreview,
+  ] = useState("");
+
 
   const [
     form,
@@ -188,11 +237,14 @@ export default function EquipmentPage() {
         getEquipment({
           search:
             search || undefined,
+
           status:
             statusFilter
             || undefined,
         }),
+
         getEquipmentCategories(),
+
         getSites(),
       ]);
 
@@ -220,6 +272,34 @@ export default function EquipmentPage() {
   useEffect(() => {
     void load();
   }, []);
+
+
+  useEffect(() => {
+    if (!equipmentImage) {
+      setEquipmentImagePreview(
+        ""
+      );
+
+      return;
+    }
+
+    const objectUrl =
+      URL.createObjectURL(
+        equipmentImage
+      );
+
+    setEquipmentImagePreview(
+      objectUrl
+    );
+
+    return () => {
+      URL.revokeObjectURL(
+        objectUrl
+      );
+    };
+  }, [
+    equipmentImage,
+  ]);
 
 
   const stats = useMemo(
@@ -263,6 +343,86 @@ export default function EquipmentPage() {
         [field]: value,
       })
     );
+  };
+
+
+  const createCategory = async (
+    event: FormEvent
+  ) => {
+    event.preventDefault();
+
+    const name =
+      categoryName.trim();
+
+    if (!name) {
+      setCategoryError(
+        "Le nom de la catégorie est obligatoire."
+      );
+
+      return;
+    }
+
+    setCategorySaving(true);
+    setCategoryError("");
+
+    try {
+      const created =
+        await createEquipmentCategory({
+          name,
+          icon:
+            categoryIcon.trim()
+            || "🔧",
+
+          description:
+            categoryDescription.trim(),
+        });
+
+      setCategories(
+        (current) => {
+          const withoutDuplicate =
+            current.filter(
+              (item) =>
+                item.id
+                !== created.id
+            );
+
+          return [
+            ...withoutDuplicate,
+            created,
+          ].sort(
+            (first, second) =>
+              first.name.localeCompare(
+                second.name,
+                "fr"
+              )
+          );
+        }
+      );
+
+      setForm(
+        (current) => ({
+          ...current,
+          category:
+            String(
+              created.id
+            ),
+        })
+      );
+
+      setCategoryName("");
+      setCategoryIcon("🔧");
+      setCategoryDescription("");
+
+      setShowCategoryCreate(
+        false
+      );
+    } catch {
+      setCategoryError(
+        "Impossible de créer la catégorie. Vérifiez qu'elle n'existe pas déjà."
+      );
+    } finally {
+      setCategorySaving(false);
+    }
   };
 
 
@@ -424,10 +584,17 @@ export default function EquipmentPage() {
 
           description:
             form.description.trim(),
+
+          image:
+            equipmentImage,
         });
 
       setForm(
         initialForm
+      );
+
+      setEquipmentImage(
+        null
       );
 
       setShowCreate(
@@ -469,18 +636,62 @@ export default function EquipmentPage() {
 
 
         {canManage && (
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() =>
-              setShowCreate(
-                (value) =>
-                  !value
-              )
-            }
-          >
-            + Ajouter un équipement
-          </button>
+          <div className="equipment-hero-actions">
+
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() =>
+                navigate(
+                  "/equipment/archives"
+                )
+              }
+            >
+              Archives
+            </button>
+
+
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() =>
+                navigate(
+                  "/equipment/qr-print"
+                )
+              }
+            >
+              Imprimer QR
+            </button>
+
+
+            {user?.role === "ADMIN" && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() =>
+                  navigate(
+                    "/equipment/deletion-requests"
+                  )
+                }
+              >
+                Demandes de suppression
+              </button>
+            )}
+
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() =>
+                setShowCreate(
+                  (value) =>
+                    !value
+                )
+              }
+            >
+              + Ajouter un équipement
+            </button>
+          </div>
         )}
       </section>
 
@@ -490,9 +701,11 @@ export default function EquipmentPage() {
           <span>
             Total
           </span>
+
           <strong>
             {stats.total}
           </strong>
+
           <small>
             Référencés
           </small>
@@ -502,9 +715,11 @@ export default function EquipmentPage() {
           <span>
             Actifs
           </span>
+
           <strong>
             {stats.active}
           </strong>
+
           <small>
             En service
           </small>
@@ -514,9 +729,11 @@ export default function EquipmentPage() {
           <span>
             Maintenance
           </span>
+
           <strong>
             {stats.maintenance}
           </strong>
+
           <small>
             En intervention
           </small>
@@ -526,9 +743,11 @@ export default function EquipmentPage() {
           <span>
             Hors service
           </span>
+
           <strong>
             {stats.unavailable}
           </strong>
+
           <small>
             Indisponibles
           </small>
@@ -567,10 +786,14 @@ export default function EquipmentPage() {
 
 
           <div className="equipment-form-grid">
+
             <label className="field">
               Code interne *
+
               <input
-                value={form.code}
+                value={
+                  form.code
+                }
                 onChange={(event) =>
                   updateForm(
                     "code",
@@ -581,60 +804,96 @@ export default function EquipmentPage() {
               />
             </label>
 
+
             <label className="field">
               Nom *
+
               <input
-                value={form.name}
+                value={
+                  form.name
+                }
                 onChange={(event) =>
                   updateForm(
                     "name",
                     event.target.value
                   )
                 }
+                placeholder="Climatiseur"
               />
             </label>
 
-            <label className="field">
-              Catégorie *
-              <select
-                value={
-                  form.category
-                }
-                onChange={(event) =>
-                  updateForm(
-                    "category",
-                    event.target.value
-                  )
-                }
-              >
-                <option value="">
-                  Choisir
-                </option>
 
-                {categories.map(
-                  (category) => (
-                    <option
-                      key={
-                        category.id
-                      }
-                      value={
-                        category.id
-                      }
-                    >
-                      {
-                        category.icon
-                      }{" "}
-                      {
-                        category.name
-                      }
-                    </option>
-                  )
-                )}
-              </select>
-            </label>
+            <div className="field equipment-category-field">
+              <span className="equipment-field-label">
+                Catégorie *
+              </span>
+
+              <div className="equipment-category-select-row">
+                <select
+                  value={
+                    form.category
+                  }
+                  onChange={(event) =>
+                    updateForm(
+                      "category",
+                      event.target.value
+                    )
+                  }
+                >
+                  <option value="">
+                    Choisir
+                  </option>
+
+                  {categories.map(
+                    (category) => (
+                      <option
+                        key={
+                          category.id
+                        }
+                        value={
+                          category.id
+                        }
+                      >
+                        {
+                          category.icon
+                        }{" "}
+                        {
+                          category.name
+                        }
+                      </option>
+                    )
+                  )}
+                </select>
+
+                <button
+                  type="button"
+                  className="equipment-add-category-button"
+                  onClick={() => {
+                    setCategoryError("");
+
+                    setShowCategoryCreate(
+                      (current) =>
+                        !current
+                    );
+                  }}
+                  title="Créer une catégorie"
+                >
+                  +
+                </button>
+              </div>
+
+              {!categories.length && (
+                <small className="equipment-category-hint">
+                  Aucune catégorie.
+                  Cliquez sur + pour en créer une.
+                </small>
+              )}
+            </div>
+
 
             <label className="field">
               État
+
               <select
                 value={
                   form.status
@@ -675,10 +934,142 @@ export default function EquipmentPage() {
               </select>
             </label>
 
+
+            {showCategoryCreate && (
+              <section className="equipment-category-create-box">
+                <div className="equipment-category-create-heading">
+                  <div>
+                    <p className="eyebrow">
+                      CATÉGORIE
+                    </p>
+
+                    <strong>
+                      Nouvelle catégorie
+                    </strong>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="equipment-category-close"
+                    onClick={() => {
+                      setShowCategoryCreate(
+                        false
+                      );
+
+                      setCategoryError("");
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+
+                {categoryError && (
+                  <div className="equipment-category-error">
+                    {categoryError}
+                  </div>
+                )}
+
+
+                <div className="equipment-category-create-grid">
+                  <label className="field">
+                    Nom *
+
+                    <input
+                      value={
+                        categoryName
+                      }
+                      onChange={(event) =>
+                        setCategoryName(
+                          event.target.value
+                        )
+                      }
+                      placeholder="Climatisation"
+                    />
+                  </label>
+
+
+                  <label className="field">
+                    Icône
+
+                    <input
+                      value={
+                        categoryIcon
+                      }
+                      onChange={(event) =>
+                        setCategoryIcon(
+                          event.target.value
+                        )
+                      }
+                      placeholder="❄️"
+                      maxLength={10}
+                    />
+                  </label>
+
+
+                  <label className="field equipment-category-description">
+                    Description
+
+                    <input
+                      value={
+                        categoryDescription
+                      }
+                      onChange={(event) =>
+                        setCategoryDescription(
+                          event.target.value
+                        )
+                      }
+                      placeholder="Équipements de climatisation"
+                    />
+                  </label>
+                </div>
+
+
+                <div className="equipment-category-create-actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => {
+                      setShowCategoryCreate(
+                        false
+                      );
+
+                      setCategoryError("");
+                    }}
+                  >
+                    Annuler
+                  </button>
+
+                  <button
+                    type="button"
+                    className="primary-button"
+                    disabled={
+                      categorySaving
+                    }
+                    onClick={(event) =>
+                      void createCategory(
+                        event
+                      )
+                    }
+                  >
+                    {
+                      categorySaving
+                        ? "Création..."
+                        : "Créer la catégorie"
+                    }
+                  </button>
+                </div>
+              </section>
+            )}
+
+
             <label className="field">
               Site *
+
               <select
-                value={form.site}
+                value={
+                  form.site
+                }
                 onChange={(event) =>
                   void selectSite(
                     event.target.value
@@ -688,6 +1079,7 @@ export default function EquipmentPage() {
                 <option value="">
                   Choisir
                 </option>
+
                 {sites.map(
                   (site) => (
                     <option
@@ -701,8 +1093,10 @@ export default function EquipmentPage() {
               </select>
             </label>
 
+
             <label className="field">
               Bâtiment *
+
               <select
                 value={
                   form.building
@@ -719,6 +1113,7 @@ export default function EquipmentPage() {
                 <option value="">
                   Choisir
                 </option>
+
                 {buildings.map(
                   (building) => (
                     <option
@@ -738,10 +1133,14 @@ export default function EquipmentPage() {
               </select>
             </label>
 
+
             <label className="field">
               Étage *
+
               <select
-                value={form.floor}
+                value={
+                  form.floor
+                }
                 disabled={
                   !form.building
                 }
@@ -754,6 +1153,7 @@ export default function EquipmentPage() {
                 <option value="">
                   Choisir
                 </option>
+
                 {floors.map(
                   (floor) => (
                     <option
@@ -767,8 +1167,10 @@ export default function EquipmentPage() {
               </select>
             </label>
 
+
             <label className="field">
               Salle / zone *
+
               <select
                 value={
                   form.location
@@ -786,6 +1188,7 @@ export default function EquipmentPage() {
                 <option value="">
                   Choisir
                 </option>
+
                 {locations.map(
                   (location) => (
                     <option
@@ -805,8 +1208,10 @@ export default function EquipmentPage() {
               </select>
             </label>
 
+
             <label className="field">
               Marque
+
               <input
                 value={
                   form.brand
@@ -820,8 +1225,10 @@ export default function EquipmentPage() {
               />
             </label>
 
+
             <label className="field">
               Modèle
+
               <input
                 value={
                   form.model_name
@@ -835,8 +1242,10 @@ export default function EquipmentPage() {
               />
             </label>
 
+
             <label className="field">
               N° de série
+
               <input
                 value={
                   form.serial_number
@@ -850,8 +1259,10 @@ export default function EquipmentPage() {
               />
             </label>
 
+
             <label className="field">
               Installation
+
               <input
                 type="date"
                 value={
@@ -866,8 +1277,90 @@ export default function EquipmentPage() {
               />
             </label>
 
+
+            <div className="field equipment-full-field">
+              <span className="equipment-field-label">
+                Photo de l'équipement
+              </span>
+
+              <div className="equipment-image-upload">
+                <div className="equipment-image-preview">
+                  {equipmentImagePreview ? (
+                    <img
+                      src={
+                        equipmentImagePreview
+                      }
+                      alt="Aperçu équipement"
+                    />
+                  ) : (
+                    <span>
+                      📷
+                    </span>
+                  )}
+                </div>
+
+                <div className="equipment-image-upload-actions">
+                  <label className="secondary-button equipment-image-picker">
+                    Choisir une photo
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) => {
+                        const file =
+                          event.target
+                            .files?.[0]
+                          ?? null;
+
+                        if (
+                          file
+                          && file.size
+                          > 5
+                            * 1024
+                            * 1024
+                        ) {
+                          setError(
+                            "La photo ne doit pas dépasser 5 Mo."
+                          );
+
+                          return;
+                        }
+
+                        setEquipmentImage(
+                          file
+                        );
+
+                        event.target.value =
+                          "";
+                      }}
+                    />
+                  </label>
+
+                  {equipmentImage && (
+                    <button
+                      type="button"
+                      className="equipment-remove-image-button"
+                      onClick={() =>
+                        setEquipmentImage(
+                          null
+                        )
+                      }
+                    >
+                      Retirer
+                    </button>
+                  )}
+
+                  <small>
+                    JPG, PNG, WEBP • 5 Mo max.
+                  </small>
+                </div>
+              </div>
+            </div>
+
+
             <label className="field equipment-full-field">
               Description
+
               <textarea
                 rows={3}
                 value={
@@ -881,7 +1374,9 @@ export default function EquipmentPage() {
                 }
               />
             </label>
+
           </div>
+
 
           <div className="equipment-form-submit">
             <button
@@ -904,12 +1399,15 @@ export default function EquipmentPage() {
           className="equipment-filter-bar"
           onSubmit={(event) => {
             event.preventDefault();
+
             void load();
           }}
         >
           <input
             type="search"
-            value={search}
+            value={
+              search
+            }
             onChange={(event) =>
               setSearch(
                 event.target.value
@@ -919,7 +1417,9 @@ export default function EquipmentPage() {
           />
 
           <select
-            value={statusFilter}
+            value={
+              statusFilter
+            }
             onChange={(event) =>
               setStatusFilter(
                 event.target.value
@@ -969,6 +1469,7 @@ export default function EquipmentPage() {
         </section>
       ) : (
         <section className="equipment-grid">
+
           {equipment.map(
             (item) => (
               <button
@@ -981,17 +1482,32 @@ export default function EquipmentPage() {
                   )
                 }
               >
-                <div className="equipment-card-icon">
-                  {
-                    item.category_icon
-                    || "🔧"
-                  }
+                <div className="equipment-card-icon equipment-card-media">
+                  {item.image_url ? (
+                    <img
+                      src={
+                        item.image_url
+                      }
+                      alt={
+                        item.name
+                      }
+                    />
+                  ) : (
+                    <span>
+                      {
+                        item.category_icon
+                        || "🔧"
+                      }
+                    </span>
+                  )}
                 </div>
 
                 <div className="equipment-card-content">
                   <div className="equipment-card-top">
                     <span className="incident-reference">
-                      {item.code}
+                      {
+                        item.code
+                      }
                     </span>
 
                     <span
@@ -1006,7 +1522,9 @@ export default function EquipmentPage() {
                   </div>
 
                   <h3>
-                    {item.name}
+                    {
+                      item.name
+                    }
                   </h3>
 
                   <p>
@@ -1017,7 +1535,9 @@ export default function EquipmentPage() {
 
                   <small>
                     📍{" "}
-                    {item.site_name}
+                    {
+                      item.site_name
+                    }
                     {" • "}
                     {
                       item.building_name
@@ -1028,26 +1548,28 @@ export default function EquipmentPage() {
                     }
                   </small>
 
-                  {(item.brand
-                    || item.model_name)
-                    && (
-                      <span className="equipment-model">
-                        {
-                          [
-                            item.brand,
-                            item.model_name,
-                          ]
-                            .filter(
-                              Boolean
-                            )
-                            .join(" ")
-                        }
-                      </span>
-                    )}
+                  {(
+                    item.brand
+                    || item.model_name
+                  ) && (
+                    <span className="equipment-model">
+                      {
+                        [
+                          item.brand,
+                          item.model_name,
+                        ]
+                          .filter(
+                            Boolean
+                          )
+                          .join(" ")
+                      }
+                    </span>
+                  )}
                 </div>
               </button>
             )
           )}
+
 
           {!equipment.length && (
             <article className="panel incident-empty equipment-empty">
@@ -1065,6 +1587,7 @@ export default function EquipmentPage() {
               </p>
             </article>
           )}
+
         </section>
       )}
 

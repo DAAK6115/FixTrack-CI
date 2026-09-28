@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import BrandLogo from "../components/BrandLogo";
 
 export default function LoginPage() {
   const { user, login } = useAuth();
@@ -34,12 +35,10 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-panel">
         <div className="login-copy">
-          <div className="brand large">
-            <div className="brand-mark">F</div>
-            <div>
-              <strong>FixTrack CI</strong>
-              <span>Maintenance & incidents</span>
-            </div>
+          <div className="login-brand-logo">
+            <BrandLogo
+              className="fixtrack-brand-logo-auth"
+            />
           </div>
 
           <div>
@@ -55,7 +54,7 @@ export default function LoginPage() {
         <form className="login-card" onSubmit={handleSubmit}>
           <div>
             <p className="eyebrow">CONNEXION</p>
-            <h2>Accéder à FixTrack</h2>
+            <h2>Accéder à votre espace</h2>
             <p className="muted">Utilisez votre compte organisation.</p>
           </div>
 

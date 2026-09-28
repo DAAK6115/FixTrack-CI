@@ -12,6 +12,9 @@ import {
   resolveEquipment,
 } from "../api/equipment";
 
+import BrandLogo from
+  "../components/BrandLogo";
+
 import type {
   Equipment,
 } from "../types/equipment";
@@ -65,6 +68,10 @@ export default function EquipmentScanPage() {
     return (
       <div className="equipment-scan-page">
         <section className="panel equipment-scan-card">
+          <BrandLogo
+            className="fixtrack-brand-logo-scan"
+          />
+
           <span className="equipment-scan-icon">
             ❌
           </span>
@@ -96,9 +103,17 @@ export default function EquipmentScanPage() {
 
   if (!equipment) {
     return (
-      <section className="panel">
-        Lecture du QR Code...
-      </section>
+      <div className="equipment-scan-page">
+        <section className="panel equipment-scan-card">
+          <BrandLogo
+            className="fixtrack-brand-logo-scan"
+          />
+
+          <p className="muted">
+            Lecture du QR Code...
+          </p>
+        </section>
+      </div>
     );
   }
 
@@ -107,6 +122,10 @@ export default function EquipmentScanPage() {
     <div className="equipment-scan-page">
 
       <section className="panel equipment-scan-card">
+        <BrandLogo
+          className="fixtrack-brand-logo-scan"
+        />
+
         <div className="equipment-scan-icon">
           {
             equipment.category_icon

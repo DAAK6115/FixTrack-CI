@@ -35,6 +35,40 @@ const MAX_SIZE =
   5 * 1024 * 1024;
 
 
+
+function normalizeCategoryName(
+  value: string
+) {
+  return value
+    .normalize("NFD")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .trim()
+    .toLocaleLowerCase(
+      "fr"
+    );
+}
+
+
+function equipmentModelLabel(
+  brand: string,
+  modelName: string
+) {
+  const values = [
+    brand,
+    modelName,
+  ].filter(
+    Boolean
+  );
+
+  return values.length
+    ? values.join(" ")
+    : "Non renseigné";
+}
+
+
 export default function EquipmentIncidentPage() {
   const {
     id,
@@ -123,6 +157,29 @@ export default function EquipmentIncidentPage() {
           setCategories(
             categoriesData
           );
+
+          const equipmentCategoryName =
+            normalizeCategoryName(
+              equipmentData
+                .category_name
+            );
+
+          const matchingCategory =
+            categoriesData.find(
+              (item) =>
+                normalizeCategoryName(
+                  item.name
+                )
+                === equipmentCategoryName
+            );
+
+          if (matchingCategory) {
+            setCategory(
+              String(
+                matchingCategory.id
+              )
+            );
+          }
 
           setTitle(
             `Panne - ${equipmentData.name}`
@@ -318,37 +375,153 @@ export default function EquipmentIncidentPage() {
       </section>
 
 
-      <section className="panel incident-equipment-banner">
-        <div className="equipment-card-icon">
-          {
-            equipment.category_icon
-            || "🔧"
-          }
+      <section className="panel incident-equipment-banner equipment-prefill-banner">
+        <div className="equipment-prefill-header">
+          <div className="equipment-card-icon equipment-card-media">
+            {equipment.image_url ? (
+              <img
+                src={
+                  equipment.image_url
+                }
+                alt={
+                  equipment.name
+                }
+              />
+            ) : (
+              <span>
+                {
+                  equipment.category_icon
+                  || "🔧"
+                }
+              </span>
+            )}
+          </div>
+
+          <div>
+            <p className="eyebrow">
+              ÉQUIPEMENT SÉLECTIONNÉ
+            </p>
+
+            <span className="incident-reference">
+              {equipment.code}
+            </span>
+
+            <strong className="equipment-prefill-name">
+              {equipment.name}
+            </strong>
+
+            <small>
+              Toutes les informations techniques
+              ci-dessous sont préremplies
+              automatiquement.
+            </small>
+          </div>
         </div>
 
-        <div>
-          <span className="incident-reference">
-            {equipment.code}
-          </span>
 
-          <strong>
-            {equipment.name}
-          </strong>
+        <div className="equipment-prefill-grid">
+          <div>
+            <span>
+              Catégorie équipement
+            </span>
 
-          <small>
-            📍{" "}
-            {equipment.site_name}
-            {" • "}
-            {
-              equipment
-                .building_name
-            }
-            {" • "}
-            {
-              equipment
-                .location_name
-            }
-          </small>
+            <strong>
+              {
+                equipment.category_icon
+              }{" "}
+              {
+                equipment.category_name
+              }
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Marque / modèle
+            </span>
+
+            <strong>
+              {
+                equipmentModelLabel(
+                  equipment.brand,
+                  equipment.model_name
+                )
+              }
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              N° de série
+            </span>
+
+            <strong>
+              {
+                equipment.serial_number
+                || "Non renseigné"
+              }
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Site
+            </span>
+
+            <strong>
+              {
+                equipment.site_name
+              }
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Bâtiment
+            </span>
+
+            <strong>
+              {
+                equipment.building_name
+              }
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Étage
+            </span>
+
+            <strong>
+              {
+                equipment.floor_name
+              }
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Salle / zone
+            </span>
+
+            <strong>
+              {
+                equipment.location_name
+              }
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              État équipement
+            </span>
+
+            <strong>
+              {
+                equipment.status_label
+              }
+            </strong>
+          </div>
         </div>
       </section>
 
@@ -375,7 +548,7 @@ export default function EquipmentIncidentPage() {
             <div className="incident-form-fields">
 
               <label className="field">
-                Catégorie *
+                Catégorie de l'incident *
 
                 <select
                   value={category}
@@ -406,6 +579,21 @@ export default function EquipmentIncidentPage() {
                     )
                   )}
                 </select>
+
+                <small className="incident-prefill-hint">
+                  {
+                    category
+                      ? (
+                          "Préremplie automatiquement à partir "
+                          + "de la catégorie de l'équipement. "
+                          + "Vous pouvez la modifier si nécessaire."
+                        )
+                      : (
+                          "Aucune catégorie d'incident correspondante "
+                          + "n'a été trouvée automatiquement."
+                        )
+                  }
+                </small>
               </label>
 
 
@@ -421,11 +609,16 @@ export default function EquipmentIncidentPage() {
                   }
                   required
                 />
+
+                <small className="incident-prefill-hint">
+                  Généré automatiquement à partir
+                  du nom de l'équipement.
+                </small>
               </label>
 
 
               <label className="field">
-                Description *
+                Description de la panne *
 
                 <textarea
                   rows={7}
@@ -437,7 +630,7 @@ export default function EquipmentIncidentPage() {
                       event.target.value
                     )
                   }
-                  placeholder="Décrivez les symptômes constatés..."
+                  placeholder="Décrivez uniquement la panne : symptômes, bruit, comportement anormal, circonstances..."
                   required
                 />
               </label>

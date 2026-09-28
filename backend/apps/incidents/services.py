@@ -7,6 +7,7 @@ from apps.accounts.models import User
 from apps.notifications.models import Notification
 from apps.notifications.services import (
     create_notification,
+    notify_roles,
 )
 
 from .models import (
@@ -131,6 +132,20 @@ def validate_incident(
         comment or "Incident validé.",
     )
 
+    if incident.reported_by_id != user.id:
+        create_notification(
+            recipient=incident.reported_by,
+            notification_type=(
+                "INCIDENT_VALIDATED"
+            ),
+            title="Incident validé",
+            message=(
+                f"{incident.reference} - "
+                f"{incident.title}"
+            ),
+            incident=incident,
+        )
+
     return incident
 
 
@@ -173,6 +188,20 @@ def reject_incident(
         user,
         comment or "Incident rejeté.",
     )
+
+    if incident.reported_by_id != user.id:
+        create_notification(
+            recipient=incident.reported_by,
+            notification_type=(
+                "INCIDENT_REJECTED"
+            ),
+            title="Incident rejeté",
+            message=(
+                f"{incident.reference} - "
+                f"{incident.title}"
+            ),
+            incident=incident,
+        )
 
     return incident
 
@@ -296,6 +325,44 @@ def assign_incident(
         incident=incident,
     )
 
+    if (
+        previous_assignment
+        and previous_assignment.technician_id
+        != technician.id
+    ):
+        create_notification(
+            recipient=(
+                previous_assignment.technician
+            ),
+            notification_type=(
+                "INCIDENT_ASSIGNMENT_REMOVED"
+            ),
+            title="Intervention réassignée",
+            message=(
+                f"Vous n'êtes plus assigné à "
+                f"{incident.reference} - "
+                f"{incident.title}."
+            ),
+            incident=incident,
+        )
+
+    if (
+        incident.reported_by_id
+        != user.id
+    ):
+        create_notification(
+            recipient=incident.reported_by,
+            notification_type=(
+                "INCIDENT_TECHNICIAN_ASSIGNED"
+            ),
+            title="Technicien assigné",
+            message=(
+                f"{technician.full_name} a été "
+                f"assigné à {incident.reference}."
+            ),
+            incident=incident,
+        )
+
     return incident
 
 
@@ -368,25 +435,49 @@ def start_incident(
         ),
     )
 
+    notification_type = (
+        Notification.Type.INTERVENTION_STARTED
+        if previous == Incident.Status.ASSIGNED
+        else Notification.Type.INTERVENTION_RESUMED
+    )
+
+    notification_title = (
+        "Intervention démarrée"
+        if previous == Incident.Status.ASSIGNED
+        else "Intervention reprise"
+    )
+
     if incident.reported_by_id != user.id:
         create_notification(
             recipient=incident.reported_by,
             notification_type=(
-                Notification.Type.INTERVENTION_STARTED
-                if previous == Incident.Status.ASSIGNED
-                else Notification.Type.INTERVENTION_RESUMED
+                notification_type
             ),
-            title=(
-                "Intervention démarrée"
-                if previous == Incident.Status.ASSIGNED
-                else "Intervention reprise"
-            ),
+            title=notification_title,
             message=(
                 f"{incident.reference} - "
                 f"{incident.title}"
             ),
             incident=incident,
         )
+
+    notify_roles(
+        organization=incident.organization,
+        roles=[
+            User.Role.ADMIN,
+            User.Role.MANAGER,
+        ],
+        notification_type=(
+            notification_type
+        ),
+        title=notification_title,
+        message=(
+            f"{incident.reference} - "
+            f"{incident.title}"
+        ),
+        incident=incident,
+        exclude_user_id=user.id,
+    )
 
     return incident
 
@@ -447,6 +538,24 @@ def hold_incident(
             ),
             incident=incident,
         )
+
+    notify_roles(
+        organization=incident.organization,
+        roles=[
+            User.Role.ADMIN,
+            User.Role.MANAGER,
+        ],
+        notification_type=(
+            Notification.Type.INTERVENTION_ON_HOLD
+        ),
+        title="Intervention en pause",
+        message=(
+            f"{incident.reference} - "
+            f"{incident.title}"
+        ),
+        incident=incident,
+        exclude_user_id=user.id,
+    )
 
     return incident
 
@@ -553,6 +662,24 @@ def resolve_incident(
             incident=incident,
         )
 
+    notify_roles(
+        organization=incident.organization,
+        roles=[
+            User.Role.ADMIN,
+            User.Role.MANAGER,
+        ],
+        notification_type=(
+            Notification.Type.INCIDENT_RESOLVED
+        ),
+        title="Intervention terminée",
+        message=(
+            f"{incident.reference} a été "
+            "marqué comme résolu."
+        ),
+        incident=incident,
+        exclude_user_id=user.id,
+    )
+
     return incident
 
 
@@ -630,6 +757,41 @@ def close_incident(
                 f"{incident.reference} a été fermé."
             ),
             incident=incident,
+        )
+
+    if (
+        incident.reported_by_id
+        != user.id
+    ):
+        create_notification(
+            recipient=incident.reported_by,
+            notification_type=(
+                Notification.Type.INCIDENT_CLOSED
+            ),
+            title="Incident fermé",
+            message=(
+                f"{incident.reference} a été fermé."
+            ),
+            incident=incident,
+        )
+
+    if user.role == User.Role.REQUESTER:
+        notify_roles(
+            organization=incident.organization,
+            roles=[
+                User.Role.ADMIN,
+                User.Role.MANAGER,
+            ],
+            notification_type=(
+                Notification.Type.INCIDENT_CLOSED
+            ),
+            title="Incident fermé",
+            message=(
+                f"{incident.reference} a été "
+                "fermé par le demandeur."
+            ),
+            incident=incident,
+            exclude_user_id=user.id,
         )
 
     return incident

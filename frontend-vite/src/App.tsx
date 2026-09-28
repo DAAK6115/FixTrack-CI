@@ -11,6 +11,9 @@ import AppLayout from "./layouts/AppLayout";
 
 import AnalyticsPage from "./pages/AnalyticsPage";
 import DashboardPage from "./pages/DashboardPage";
+import EquipmentArchivesPage from "./pages/EquipmentArchivesPage";
+import EquipmentDeletionRequestsPage from "./pages/EquipmentDeletionRequestsPage";
+import EquipmentQrPrintPage from "./pages/EquipmentQrPrintPage";
 import EquipmentDetailPage from "./pages/EquipmentDetailPage";
 import EquipmentIncidentPage from "./pages/EquipmentIncidentPage";
 import EquipmentPage from "./pages/EquipmentPage";
@@ -22,7 +25,7 @@ import LocationsPage from "./pages/LocationsPage";
 import LoginPage from "./pages/LoginPage";
 import NewIncidentPage from "./pages/NewIncidentPage";
 import NotificationsPage from "./pages/NotificationsPage";
-import PlaceholderPage from "./pages/PlaceholderPage";
+import SettingsPage from "./pages/SettingsPage";
 import TechniciansPage from "./pages/TechniciansPage";
 import UsersPage from "./pages/UsersPage";
 
@@ -156,6 +159,22 @@ export default function App() {
                 <AnalyticsPage />
               }
             />
+
+
+            <Route
+              path="/equipment/archives"
+              element={
+                <EquipmentArchivesPage />
+              }
+            />
+
+
+            <Route
+              path="/equipment/qr-print"
+              element={
+                <EquipmentQrPrintPage />
+              }
+            />
           </Route>
 
 
@@ -169,6 +188,14 @@ export default function App() {
             }
           >
             <Route
+              path="/equipment/deletion-requests"
+              element={
+                <EquipmentDeletionRequestsPage />
+              }
+            />
+
+
+            <Route
               path="/users"
               element={
                 <UsersPage />
@@ -178,9 +205,7 @@ export default function App() {
             <Route
               path="/settings"
               element={
-                <PlaceholderPage
-                  title="Paramètres"
-                />
+                <SettingsPage />
               }
             />
           </Route>
