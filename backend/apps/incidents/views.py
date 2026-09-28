@@ -112,6 +112,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
                 "organization",
                 "reported_by",
                 "category",
+                "equipment",
                 "location",
                 "location__floor",
                 "location__floor__building",

@@ -79,6 +79,14 @@ class Incident(models.Model):
         on_delete=models.PROTECT,
         related_name="incidents",
     )
+
+    equipment = models.ForeignKey(
+        "equipment.Equipment",
+        on_delete=models.PROTECT,
+        related_name="incidents",
+        null=True,
+        blank=True,
+    )
     title = models.CharField(max_length=180)
     description = models.TextField()
     requested_priority = models.CharField(

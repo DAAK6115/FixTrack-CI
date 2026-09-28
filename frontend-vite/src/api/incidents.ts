@@ -67,6 +67,13 @@ export async function createIncident(
     String(payload.location)
   );
 
+  if (payload.equipment) {
+    formData.append(
+      "equipment",
+      String(payload.equipment)
+    );
+  }
+
   formData.append(
     "title",
     payload.title

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "apps.incidents",
     "apps.notifications.apps.NotificationsConfig",
     "apps.analytics.apps.AnalyticsConfig",
+    "apps.equipment.apps.EquipmentConfig",
 ]
 
 
@@ -263,3 +264,8 @@ CHANNEL_LAYERS = {
         ),
     },
 }
+
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "http://localhost:5173",
+).rstrip("/")

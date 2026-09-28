@@ -80,6 +80,10 @@ export default function AppLayout() {
             Sites & lieux
           </NavLink>
 
+          <NavLink to="/equipment">
+            Équipements
+          </NavLink>
+
 
           {(
             user.role === "TECHNICIAN"

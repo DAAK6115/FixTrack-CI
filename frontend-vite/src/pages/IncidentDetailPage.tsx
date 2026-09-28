@@ -453,6 +453,37 @@ export default function IncidentDetailPage() {
               </div>
 
 
+              {incident.equipment_detail && (
+                <div>
+                  <span>
+                    Équipement
+                  </span>
+
+                  <button
+                    type="button"
+                    className="inline-equipment-link"
+                    onClick={() =>
+                      navigate(
+                        `/equipment/${incident.equipment_detail?.id}`
+                      )
+                    }
+                  >
+                    {
+                      incident
+                        .equipment_detail
+                        .code
+                    }
+                    {" — "}
+                    {
+                      incident
+                        .equipment_detail
+                        .name
+                    }
+                  </button>
+                </div>
+              )}
+
+
               <div>
                 <span>
                   Signalé par

@@ -7,3 +7,4 @@ psycopg[binary]
 python-dotenv
 Pillow
 channels[daphne]>=4.0,<5
+qrcode[pil]>=7.4,<9

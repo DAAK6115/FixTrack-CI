@@ -124,6 +124,15 @@ export type IncidentListItem = {
 
   cover_image: string | null;
 
+  equipment:
+    number | null;
+
+  equipment_name:
+    string | null;
+
+  equipment_code:
+    string | null;
+
   assigned_technician_id:
     number | null;
 
@@ -175,6 +184,16 @@ export type IncidentDetail = {
       address: string;
     };
   };
+
+  equipment:
+    number | null;
+
+  equipment_detail: {
+    id: number;
+    code: string;
+    name: string;
+    status: string;
+  } | null;
 
   reported_by: {
     id: number;
@@ -240,6 +259,7 @@ export type IncidentFilters = {
 export type CreateIncidentInput = {
   category: number;
   location: number;
+  equipment?: number;
 
   title: string;
   description: string;

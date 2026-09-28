@@ -11,6 +11,10 @@ import AppLayout from "./layouts/AppLayout";
 
 import AnalyticsPage from "./pages/AnalyticsPage";
 import DashboardPage from "./pages/DashboardPage";
+import EquipmentDetailPage from "./pages/EquipmentDetailPage";
+import EquipmentIncidentPage from "./pages/EquipmentIncidentPage";
+import EquipmentPage from "./pages/EquipmentPage";
+import EquipmentScanPage from "./pages/EquipmentScanPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
 import IncidentsPage from "./pages/IncidentsPage";
 import InterventionsPage from "./pages/InterventionsPage";
@@ -74,6 +78,38 @@ export default function App() {
           <Route
             path="/locations"
             element={<LocationsPage />}
+          />
+
+
+          <Route
+            path="/equipment"
+            element={
+              <EquipmentPage />
+            }
+          />
+
+
+          <Route
+            path="/equipment/scan/:token"
+            element={
+              <EquipmentScanPage />
+            }
+          />
+
+
+          <Route
+            path="/equipment/:id/report"
+            element={
+              <EquipmentIncidentPage />
+            }
+          />
+
+
+          <Route
+            path="/equipment/:id"
+            element={
+              <EquipmentDetailPage />
+            }
           />
 
 

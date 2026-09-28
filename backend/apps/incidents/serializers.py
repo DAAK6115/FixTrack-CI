@@ -175,6 +175,19 @@ class IncidentListSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     cover_image = serializers.SerializerMethodField()
+
+    equipment_name = serializers.CharField(
+        source="equipment.name",
+        read_only=True,
+        allow_null=True,
+    )
+
+    equipment_code = serializers.CharField(
+        source="equipment.code",
+        read_only=True,
+        allow_null=True,
+    )
+
     assigned_technician_id = serializers.SerializerMethodField()
     assigned_technician_name = serializers.SerializerMethodField()
 
@@ -198,6 +211,9 @@ class IncidentListSerializer(serializers.ModelSerializer):
             "status_label",
             "reported_at",
             "cover_image",
+            "equipment",
+            "equipment_name",
+            "equipment_code",
             "assigned_technician_id",
             "assigned_technician_name",
         ]
@@ -242,6 +258,7 @@ class IncidentDetailSerializer(serializers.ModelSerializer):
     )
     reported_by = serializers.SerializerMethodField()
     location_detail = serializers.SerializerMethodField()
+    equipment_detail = serializers.SerializerMethodField()
     media = IncidentMediaSerializer(many=True, read_only=True)
     status_history = IncidentStatusHistorySerializer(
         many=True,
@@ -277,6 +294,8 @@ class IncidentDetailSerializer(serializers.ModelSerializer):
             "category_detail",
             "location",
             "location_detail",
+            "equipment",
+            "equipment_detail",
             "reported_by",
             "requested_priority",
             "requested_priority_label",
@@ -348,6 +367,17 @@ class IncidentDetailSerializer(serializers.ModelSerializer):
             },
         }
 
+    def get_equipment_detail(self, obj):
+        if not obj.equipment:
+            return None
+
+        return {
+            "id": obj.equipment.id,
+            "code": obj.equipment.code,
+            "name": obj.equipment.name,
+            "status": obj.equipment.status,
+        }
+
     def get_validated_priority_label(self, obj):
         if not obj.validated_priority:
             return None
@@ -386,6 +416,7 @@ class IncidentCreateSerializer(serializers.ModelSerializer):
             "reference",
             "category",
             "location",
+            "equipment",
             "title",
             "description",
             "requested_priority",
@@ -431,6 +462,44 @@ class IncidentCreateSerializer(serializers.ModelSerializer):
             )
 
         return location
+
+    def validate_equipment(self, equipment):
+        request = self.context["request"]
+
+        if equipment is None:
+            return equipment
+
+        if equipment.organization_id != request.user.organization_id:
+            raise serializers.ValidationError(
+                "Cet équipement n'appartient pas à votre organisation."
+            )
+
+        if not equipment.is_active:
+            raise serializers.ValidationError(
+                "Cet équipement est désactivé."
+            )
+
+        return equipment
+
+    def validate(self, attrs):
+        equipment = attrs.get("equipment")
+        location = attrs.get("location")
+
+        if (
+            equipment
+            and location
+            and equipment.location_id != location.id
+        ):
+            raise serializers.ValidationError(
+                {
+                    "location": (
+                        "La localisation doit correspondre "
+                        "à celle de l'équipement."
+                    )
+                }
+            )
+
+        return attrs
 
     def validate_images(self, images):
         if len(images) > MAX_IMAGES:

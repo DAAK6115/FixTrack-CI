@@ -84,6 +84,13 @@ urlpatterns = [
             "apps.analytics.urls"
         ),
     ),
+
+    path(
+        "api/v1/equipment/",
+        include(
+            "apps.equipment.urls"
+        ),
+    ),
 ]
 
 
